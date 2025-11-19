@@ -1,2 +1,2 @@
 # POOSD-Large-Project-ControllyDOOM
-a smal surprise hopefully
+a small surprise hopefully
