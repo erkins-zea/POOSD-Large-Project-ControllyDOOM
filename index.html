@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FreeDOOM Mobile</title>
+    <title>FreeDOOM - WebAssembly Edition</title>
     <style>
         * {
             margin: 0;
@@ -132,6 +132,15 @@
             width: 100vw;
             height: 100vh;
             display: none;
+            position: relative;
+        }
+        
+        #canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
         }
         
         #controls-help {
@@ -146,6 +155,41 @@
             max-width: 200px;
             z-index: 100;
             display: none;
+            cursor: pointer;
+        }
+        
+        #fullscreen-btn {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(255, 0, 0, 0.8);
+            color: #fff;
+            border: 2px solid #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 100;
+            display: none;
+        }
+        
+        #fullscreen-btn:hover {
+            background: rgba(255, 50, 50, 0.9);
+        }
+        
+        .tech-badge {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 255, 0, 0.2);
+            color: #0f0;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-family: monospace;
+            border: 1px solid #0f0;
+            z-index: 101;
+            display: none;
         }
         
         .hidden {
@@ -158,6 +202,7 @@
     <div id="game-select">
         <h1>🎮 FREEDOOM</h1>
         <p>Select Your Game</p>
+        <p style="font-size: 0.9em; color: #0f0; margin-bottom: 20px;">⚡ WebAssembly Edition - High Performance</p>
         
         <button class="game-button" onclick="startGame('freedoom1.wad', 'FreeDOOM Phase 1')">
             FreeDOOM Phase 1
@@ -170,83 +215,187 @@
         </button>
         
         <p style="font-size: 0.8em; color: #444; margin-top: 30px;">
-            Tap mascot 7 times on login to return here
+            Powered by Chocolate Doom WebAssembly
         </p>
     </div>
     
     <!-- Loading Screen -->
     <div id="loading">
         <h1 id="game-title">🎮 FREEDOOM</h1>
-        <p>Loading...</p>
+        <p>Loading WebAssembly Engine...</p>
         <div id="progress">
             <div id="progress-bar"></div>
         </div>
         <p id="status">Initializing...</p>
         <p style="font-size: 0.8em; color: #666; margin-top: 20px;">
-            This may take 15-30 seconds
+            First load may take 5-10 seconds
         </p>
     </div>
     
     <!-- Game Container -->
-    <div id="game-container"></div>
+    <div id="game-container">
+        <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+        <div class="tech-badge" id="tech-badge">WASM</div>
+    </div>
     
     <!-- Controls Help -->
-    <div id="controls-help">
+    <div id="controls-help" onclick="this.style.display='none'">
         <strong>Controls:</strong><br>
-        Arrow Keys: Move<br>
+        Arrow Keys / WASD: Move<br>
         Ctrl: Fire<br>
         Space: Use/Open<br>
         Shift: Run<br>
         1-7: Weapons<br>
+        F: Fullscreen<br>
         <br>
         <small>Tap to hide</small>
     </div>
-
-    <!-- js-dos from CDN -->
-    <!-- Replace the script tag with: -->
-<script src="https://cdn.jsdelivr.net/npm/js-dos@7.xx/dist/js-dos.js"></script>
+    
+    <button id="fullscreen-btn" onclick="toggleFullscreen()">Fullscreen</button>
 
     <script>
-    function startGame(wadFile, gameName) {
-        gameSelect.style.display = 'none';
-        loading.classList.add('active');
-        gameTitle.textContent = `🎮 ${gameName}`;
+        let currentWad = null;
+        let Module = null;
         
-        let progress = 0;
-        progressInterval = setInterval(() => {
-            progress += Math.random() * 15;
-            if (progress > 90) progress = 90;
-            progressBar.style.width = progress + '%';
-        }, 500);
-        
-        status.textContent = `Loading ${gameName}...`;
-        
-        // Use emulators API (js-dos 7.xx)
-        emulators.pathPrefix = "https://cdn.jsdelivr.net/npm/js-dos@7.xx/dist/";
-        
-        Dos(gameContainer, {
-            url: `./${wadFile}`,  // Your WAD file
-        }).then(ci => {
-            clearInterval(progressInterval);
-            progressBar.style.width = '100%';
-            
-            setTimeout(() => {
-                loading.classList.remove('active');
-                gameContainer.style.display = 'block';
-                controlsHelp.style.display = 'block';
-            }, 500);
-        }).catch(error => {
-            status.textContent = 'Error: ' + error;
-            status.style.color = '#ff0000';
-            clearInterval(progressInterval);
-            
-            setTimeout(() => {
-                if (confirm('Failed to load game. Return to menu?')) {
-                    location.reload();
+        // Setup the Emscripten Module configuration
+        function setupModule(wadFile) {
+            Module = {
+                canvas: document.getElementById('canvas'),
+                arguments: ['-iwad', wadFile],
+                preRun: [function() {
+                    updateStatus('Loading WAD file...');
+                    // Preload the WAD file
+                    Module.FS.createPreloadedFile('/', wadFile, wadFile, true, false);
+                }],
+                postRun: [function() {
+                    updateStatus('Game started!');
+                    setTimeout(() => {
+                        document.getElementById('loading').classList.remove('active');
+                        document.getElementById('game-container').style.display = 'block';
+                        document.getElementById('controls-help').style.display = 'block';
+                        document.getElementById('fullscreen-btn').style.display = 'block';
+                        document.getElementById('tech-badge').style.display = 'block';
+                        document.getElementById('progress-bar').style.width = '100%';
+                    }, 500);
+                }],
+                print: function(text) {
+                    console.log('[DOOM]', text);
+                    // Parse doom messages
+                    if (text.includes('doom:')) {
+                        const msg = text.split('doom:')[1];
+                        if (msg.includes('game started')) {
+                            updateStatus('Game ready!');
+                        }
+                    }
+                },
+                printErr: function(text) {
+                    console.error('[DOOM Error]', text);
+                },
+                setStatus: function(text) {
+                    if (text) {
+                        updateStatus(text);
+                        // Update progress based on status
+                        if (text.includes('Downloading')) {
+                            const match = text.match(/(\d+)\/(\d+)/);
+                            if (match) {
+                                const progress = (parseInt(match[1]) / parseInt(match[2])) * 100;
+                                document.getElementById('progress-bar').style.width = progress + '%';
+                            }
+                        }
+                    }
+                },
+                totalDependencies: 0,
+                monitorRunDependencies: function(left) {
+                    this.totalDependencies = Math.max(this.totalDependencies, left);
+                    const progress = ((this.totalDependencies - left) / this.totalDependencies) * 90;
+                    document.getElementById('progress-bar').style.width = progress + '%';
+                    if (left === 0) {
+                        updateStatus('Starting game...');
+                    }
                 }
-            }, 2000);
+            };
+            
+            return Module;
+        }
+        
+        function updateStatus(text) {
+            document.getElementById('status').textContent = text;
+        }
+        
+        function startGame(wadFile, gameName) {
+            currentWad = wadFile;
+            
+            // Hide selection, show loading
+            document.getElementById('game-select').style.display = 'none';
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('game-title').textContent = `🎮 ${gameName}`;
+            updateStatus('Initializing WebAssembly...');
+            
+            // Check if WAD file exists
+            checkWadFile(wadFile).then(exists => {
+                if (!exists) {
+                    updateStatus(`Error: ${wadFile} not found!`);
+                    document.getElementById('status').style.color = '#ff0000';
+                    setTimeout(() => {
+                        alert(`${wadFile} not found. Please ensure the WAD file is in the same directory as this HTML file.`);
+                        location.reload();
+                    }, 2000);
+                    return;
+                }
+                
+                // Setup and load the WASM module
+                setupModule(wadFile);
+                
+                // Load the Emscripten-generated JS file
+                // NOTE: You'll need to compile Chocolate Doom to WASM first
+                // and include the generated .js file here
+                const script = document.createElement('script');
+                script.src = 'chocolate-doom.js'; // This would be your compiled WASM loader
+                script.onerror = function() {
+                    updateStatus('Error: WASM engine not found!');
+                    document.getElementById('status').style.color = '#ff0000';
+                    setTimeout(() => {
+                        alert('WebAssembly engine (chocolate-doom.js) not found.\n\nTo use this, you need to:\n1. Compile Chocolate Doom to WebAssembly\n2. Place chocolate-doom.js and chocolate-doom.wasm in this directory\n\nSee: https://github.com/cloudflare/doom-wasm');
+                        location.reload();
+                    }, 2000);
+                };
+                document.body.appendChild(script);
+                
+            }).catch(error => {
+                updateStatus('Error checking WAD file');
+                console.error(error);
+            });
+        }
+        
+        function checkWadFile(wadFile) {
+            return fetch(wadFile, { method: 'HEAD' })
+                .then(response => response.ok)
+                .catch(() => false);
+        }
+        
+        function toggleFullscreen() {
+            const elem = document.documentElement;
+            if (!document.fullscreenElement) {
+                elem.requestFullscreen().catch(err => {
+                    console.error('Fullscreen error:', err);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+        
+        // Keyboard event handling for better mobile support
+        document.addEventListener('keydown', function(e) {
+            // Prevent default for game keys
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+                e.preventDefault();
+            }
         });
-    }
+        
+        // Touch controls could be added here for mobile
     </script>
+    
+    <!-- Note: You need to add the compiled WASM files -->
+    <!-- chocolate-doom.js and chocolate-doom.wasm should be in the same directory -->
 </body>
 </html>
