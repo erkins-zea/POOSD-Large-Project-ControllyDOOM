@@ -203,104 +203,50 @@
     </div>
 
     <!-- js-dos from CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/js-dos@6.22.60/dist/js-dos.js"></script>
-    
+    <!-- Replace the script tag with: -->
+<script src="https://cdn.jsdelivr.net/npm/js-dos@7.xx/dist/js-dos.js"></script>
+
     <script>
-        const gameSelect = document.getElementById('game-select');
-        const loading = document.getElementById('loading');
-        const gameContainer = document.getElementById('game-container');
-        const progressBar = document.getElementById('progress-bar');
-        const status = document.getElementById('status');
-        const gameTitle = document.getElementById('game-title');
-        const controlsHelp = document.getElementById('controls-help');
+    function startGame(wadFile, gameName) {
+        gameSelect.style.display = 'none';
+        loading.classList.add('active');
+        gameTitle.textContent = `🎮 ${gameName}`;
         
-        let progressInterval;
+        let progress = 0;
+        progressInterval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress > 90) progress = 90;
+            progressBar.style.width = progress + '%';
+        }, 500);
         
-        // Hide controls help on tap
-        controlsHelp.addEventListener('click', () => {
-            controlsHelp.classList.add('hidden');
-        });
+        status.textContent = `Loading ${gameName}...`;
         
-        function startGame(wadFile, gameName) {
-            // Hide selection, show loading
-            gameSelect.style.display = 'none';
-            loading.classList.add('active');
-            gameTitle.textContent = `${gameName}`;
+        // Use emulators API (js-dos 7.xx)
+        emulators.pathPrefix = "https://cdn.jsdelivr.net/npm/js-dos@7.xx/dist/";
+        
+        Dos(gameContainer, {
+            url: `./${wadFile}`,  // Your WAD file
+        }).then(ci => {
+            clearInterval(progressInterval);
+            progressBar.style.width = '100%';
             
-            // Progress simulation
-            let progress = 0;
-            progressInterval = setInterval(() => {
-                progress += Math.random() * 15;
-                if (progress > 90) progress = 90;
-                progressBar.style.width = progress + '%';
+            setTimeout(() => {
+                loading.classList.remove('active');
+                gameContainer.style.display = 'block';
+                controlsHelp.style.display = 'block';
             }, 500);
+        }).catch(error => {
+            status.textContent = 'Error: ' + error;
+            status.style.color = '#ff0000';
+            clearInterval(progressInterval);
             
-            // Initialize js-dos (CORRECTED)
-            status.textContent = `Loading ${gameName}...`;
-            
-            // Create canvas element
-            const canvas = document.createElement('canvas');
-            gameContainer.appendChild(canvas);
-            
-            Dos(canvas, {
-                wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.wasm.js",
-            }).ready((fs, main) => {
-                status.textContent = 'Downloading game files...';
-                progressBar.style.width = '50%';
-                
-                // Download WAD file
-                fetch(`./${wadFile}`)
-                    .then(response => {
-                        if (!response.ok) throw new Error('WAD file not found');
-                        return response.arrayBuffer();
-                    })
-                    .then(data => {
-                        status.textContent = 'Extracting files...';
-                        progressBar.style.width = '75%';
-                        
-                        // Write WAD to virtual filesystem
-                        fs.createFile("FREEDOOM.WAD", new Uint8Array(data));
-                        
-                        status.textContent = 'Starting game...';
-                        progressBar.style.width = '95%';
-                        
-                        // Start DOOM
-                        main(["-c", "FREEDOOM.WAD"]).then(() => {
-                            clearInterval(progressInterval);
-                            progressBar.style.width = '100%';
-                            
-                            setTimeout(() => {
-                                loading.classList.remove('active');
-                                gameContainer.style.display = 'block';
-                                controlsHelp.style.display = 'block';
-                            }, 500);
-                        });
-                    })
-                    .catch(error => {
-                        status.textContent = 'Error: ' + error.message;
-                        status.style.color = '#ff0000';
-                        clearInterval(progressInterval);
-                        
-                        setTimeout(() => {
-                            if (confirm('Failed to load game. Return to menu?')) {
-                                location.reload();
-                            }
-                        }, 2000);
-                    });
-            }).catch(error => {
-                status.textContent = 'Error initializing: ' + error;
-                status.style.color = '#ff0000';
-                clearInterval(progressInterval);
-            });
-        }
-        // Prevent page scrolling/zooming
-        document.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-        }, { passive: false });
-        
-        document.addEventListener('gesturestart', (e) => {
-            e.preventDefault();
+            setTimeout(() => {
+                if (confirm('Failed to load game. Return to menu?')) {
+                    location.reload();
+                }
+            }, 2000);
         });
+    }
     </script>
 </body>
 </html>
