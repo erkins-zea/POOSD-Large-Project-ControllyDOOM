@@ -247,9 +247,7 @@
                     // Load the selected WAD file
                     // If you uploaded to GitHub, use: `./${wadFile}`
                     // For now using Internet Archive as fallback
-                    const wadPath = wadFile === 'freedoom1.wad' 
-                        ? 'https://archive.org/cors/freedoom-phase-1-v0.12.1/freedm.wad'
-                        : 'https://archive.org/cors/freedoom-phase-2-v0.12.1/freedoom2.wad';
+                    const wadPath = `./${wadFile}`;
                     
                     dosbox.run(wadPath, "./FREEDOOM.WAD").then(() => {
                         clearInterval(progressInterval);
