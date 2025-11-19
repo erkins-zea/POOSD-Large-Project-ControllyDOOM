@@ -1,306 +1,187 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FreeDOOM Mobile</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            background: #000;
-            overflow: hidden;
-            font-family: Arial, sans-serif;
-        }
-        
-        #game-select {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #1a0000 0%, #000000 100%);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-        }
-        
-        #game-select h1 {
-            color: #ff0000;
-            font-size: 3em;
-            margin-bottom: 20px;
-            text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000; }
-            50% { text-shadow: 0 0 30px #ff0000, 0 0 60px #ff0000, 0 0 80px #ff0000; }
-        }
-        
-        #game-select p {
-            color: #aaa;
-            font-size: 1.2em;
-            margin-bottom: 40px;
-        }
-        
-        .game-button {
-            background: linear-gradient(145deg, #2a0000, #1a0000);
-            border: 3px solid #ff0000;
-            color: #fff;
-            padding: 20px 40px;
-            font-size: 1.5em;
-            margin: 15px;
-            cursor: pointer;
-            border-radius: 10px;
-            transition: all 0.3s;
-            min-width: 300px;
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
-        }
-        
-        .game-button:hover {
-            background: linear-gradient(145deg, #3a0000, #2a0000);
-            border-color: #ff3333;
-            box-shadow: 0 0 30px rgba(255, 0, 0, 0.6);
-            transform: scale(1.05);
-        }
-        
-        .game-button:active {
-            transform: scale(0.98);
-        }
-        
-        .game-info {
-            font-size: 0.7em;
-            color: #666;
-            margin-top: 5px;
-        }
-        
-        #loading {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: #fff;
-            z-index: 1000;
-        }
-        
-        #loading.active {
-            display: flex;
-        }
-        
-        #loading h1 {
-            color: #ff0000;
-            font-size: 2em;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px #000;
-        }
-        
-        #loading p {
-            font-size: 1.2em;
-            margin: 10px;
-        }
-        
-        #progress {
-            width: 80%;
-            height: 30px;
-            background: #333;
-            border: 2px solid #666;
-            margin: 20px;
-            position: relative;
-        }
-        
-        #progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #ff0000, #aa0000);
-            width: 0%;
-            transition: width 0.3s;
-        }
-        
-        #game-container {
-            width: 100vw;
-            height: 100vh;
-            display: none;
-        }
-        
-        #controls-help {
-            position: fixed;
-            bottom: 10px;
-            left: 10px;
-            background: rgba(0,0,0,0.8);
-            color: #fff;
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            max-width: 200px;
-            z-index: 100;
-            display: none;
-        }
-        
-        .hidden {
-            display: none !important;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FreeDOOM Mobile</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #000; overflow: hidden; font-family: Arial, sans-serif; }
+
+#game-select {
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    background: linear-gradient(135deg, #1a0000 0%, #000000 100%);
+    display: flex; flex-direction: column; justify-content:center; align-items:center;
+    z-index:2000;
+}
+#game-select h1 {
+    color:#ff0000; font-size:3em; margin-bottom:20px;
+    text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0%,100% { text-shadow: 0 0 20px #ff0000,0 0 40px #ff0000; }
+    50% { text-shadow: 0 0 30px #ff0000,0 0 60px #ff0000,0 0 80px #ff0000; }
+}
+#game-select p { color:#aaa; font-size:1.2em; margin-bottom:40px; }
+.game-button {
+    background: linear-gradient(145deg, #2a0000, #1a0000);
+    border:3px solid #ff0000; color:#fff;
+    padding:20px 40px; font-size:1.5em; margin:15px;
+    cursor:pointer; border-radius:10px;
+    transition: all 0.3s; min-width:300px;
+    box-shadow:0 0 20px rgba(255,0,0,0.3);
+}
+.game-button:hover {
+    background: linear-gradient(145deg, #3a0000, #2a0000);
+    border-color:#ff3333; box-shadow:0 0 30px rgba(255,0,0,0.6);
+    transform: scale(1.05);
+}
+.game-button:active { transform: scale(0.98); }
+.game-info { font-size:0.7em; color:#666; margin-top:5px; }
+
+#loading {
+    position:fixed; top:0; left:0; width:100%; height:100%;
+    background:#000; display:none; flex-direction:column;
+    justify-content:center; align-items:center; color:#fff;
+    z-index:1000;
+}
+#loading.active { display:flex; }
+#loading h1 { color:#ff0000; font-size:2em; margin-bottom:20px; text-shadow:2px 2px 4px #000; }
+#loading p { font-size:1.2em; margin:10px; }
+#progress { width:80%; height:30px; background:#333; border:2px solid #666; margin:20px; position:relative; }
+#progress-bar { height:100%; background:linear-gradient(90deg, #ff0000, #aa0000); width:0%; transition: width 0.3s; }
+
+#game-container { width:100vw; height:100vh; display:none; }
+#controls-help {
+    position:fixed; bottom:10px; left:10px;
+    background:rgba(0,0,0,0.8); color:#fff;
+    padding:10px; border-radius:5px; font-size:12px;
+    max-width:200px; z-index:100; display:none;
+}
+.hidden { display:none !important; }
+</style>
 </head>
 <body>
-    <!-- Game Selection Screen -->
-    <div id="game-select">
-        <h1>🎮 FREEDOOM</h1>
-        <p>Select Your Game</p>
-        
-        <button class="game-button" onclick="startGame('freedoom1.wad', 'FreeDOOM Phase 1')">
-            FreeDOOM Phase 1
-            <div class="game-info">Classic 4 Episodes</div>
-        </button>
-        
-        <button class="game-button" onclick="startGame('freedoom2.wad', 'FreeDOOM Phase 2')">
-            FreeDOOM Phase 2
-            <div class="game-info">32 Action-Packed Levels</div>
-        </button>
-        
-        <p style="font-size: 0.8em; color: #444; margin-top: 30px;">
-            Tap mascot 7 times on login to return here
-        </p>
-    </div>
-    
-    <!-- Loading Screen -->
-    <div id="loading">
-        <h1 id="game-title">🎮 FREEDOOM</h1>
-        <p>Loading...</p>
-        <div id="progress">
-            <div id="progress-bar"></div>
-        </div>
-        <p id="status">Initializing...</p>
-        <p style="font-size: 0.8em; color: #666; margin-top: 20px;">
-            This may take 15-30 seconds
-        </p>
-    </div>
-    
-    <!-- Game Container -->
-    <div id="game-container"></div>
-    
-    <!-- Controls Help -->
-    <div id="controls-help">
-        <strong>Controls:</strong><br>
-        Arrow Keys: Move<br>
-        Ctrl: Fire<br>
-        Space: Use/Open<br>
-        Shift: Run<br>
-        1-7: Weapons<br>
-        <br>
-        <small>Tap to hide</small>
-    </div>
 
-    <!-- js-dos from CDN -->
-    <script src="./js-dos.js"></script>
-    
-    <script>
-        const gameSelect = document.getElementById('game-select');
-        const loading = document.getElementById('loading');
-        const gameContainer = document.getElementById('game-container');
-        const progressBar = document.getElementById('progress-bar');
-        const status = document.getElementById('status');
-        const gameTitle = document.getElementById('game-title');
-        const controlsHelp = document.getElementById('controls-help');
-        
-        let progressInterval;
-        
-        // Hide controls help on tap
-        controlsHelp.addEventListener('click', () => {
-            controlsHelp.classList.add('hidden');
-        });
-        
-        function startGame(wadFile, gameName) {
-            // Hide selection, show loading
-            gameSelect.style.display = 'none';
-            loading.classList.add('active');
-            gameTitle.textContent = `${gameName}`;
-            
-            // Progress simulation
-            let progress = 0;
-            progressInterval = setInterval(() => {
-                progress += Math.random() * 15;
-                if (progress > 90) progress = 90;
-                progressBar.style.width = progress + '%';
-            }, 500);
-            
-            // Initialize js-dos with LOCAL wdosbox
-            status.textContent = `Loading ${gameName}...`;
-            
-            // Create canvas element
-            const canvas = document.createElement('canvas');
-            gameContainer.appendChild(canvas);
-            
-            Dos(canvas, {
-                wdosboxUrl: "./wdosbox.js",
-            }).ready((fs, main) => {
-                status.textContent = 'Downloading game files...';
-                progressBar.style.width = '50%';
-                
-                // Download WAD file
-                fetch(`./${wadFile}`)
-                    .then(response => {
-                        if (!response.ok) throw new Error('WAD file not found');
-                        return response.arrayBuffer();
-                    })
-                    .then(data => {
-                        status.textContent = 'Extracting files...';
-                        progressBar.style.width = '75%';
-                        
-                        // Write WAD to virtual filesystem
-                        fs.createFile("FREEDOOM.WAD", new Uint8Array(data));
-                        
-                        status.textContent = 'Starting game...';
-                        progressBar.style.width = '95%';
-                        
-                        // Start DOOM
-                        main(["-c", "FREEDOOM.WAD"]).then(() => {
-                            clearInterval(progressInterval);
-                            progressBar.style.width = '100%';
-                            
-                            setTimeout(() => {
-                                loading.classList.remove('active');
-                                gameContainer.style.display = 'block';
-                                controlsHelp.style.display = 'block';
-                            }, 500);
-                        });
-                    })
-                    .catch(error => {
-                        status.textContent = 'Error: ' + error.message;
-                        status.style.color = '#ff0000';
+<div id="game-select">
+    <h1>🎮 FREEDOOM</h1>
+    <p>Select Your Game</p>
+
+    <button class="game-button" onclick="startGame('freedoom1.wad', 'FreeDOOM Phase 1')">
+        FreeDOOM Phase 1
+        <div class="game-info">Classic 4 Episodes</div>
+    </button>
+
+    <button class="game-button" onclick="startGame('freedoom2.wad', 'FreeDOOM Phase 2')">
+        FreeDOOM Phase 2
+        <div class="game-info">32 Action-Packed Levels</div>
+    </button>
+
+    <p style="font-size:0.8em; color:#444; margin-top:30px;">
+        Tap mascot 7 times on login to return here
+    </p>
+</div>
+
+<div id="loading">
+    <h1 id="game-title">🎮 FREEDOOM</h1>
+    <p>Loading...</p>
+    <div id="progress"><div id="progress-bar"></div></div>
+    <p id="status">Initializing...</p>
+    <p style="font-size:0.8em; color:#666; margin-top:20px;">
+        This may take 15-30 seconds
+    </p>
+</div>
+
+<div id="game-container"></div>
+
+<div id="controls-help">
+<strong>Controls:</strong><br>
+Arrow Keys: Move<br>
+Ctrl: Fire<br>
+Space: Use/Open<br>
+Shift: Run<br>
+1-7: Weapons<br><br>
+<small>Tap to hide</small>
+</div>
+
+<!-- JS-DOS v7 CDN -->
+<script src="https://js-dos.com/7.4.1/js-dos.js"></script>
+
+<script>
+const gameSelect = document.getElementById('game-select');
+const loading = document.getElementById('loading');
+const gameContainer = document.getElementById('game-container');
+const progressBar = document.getElementById('progress-bar');
+const status = document.getElementById('status');
+const gameTitle = document.getElementById('game-title');
+const controlsHelp = document.getElementById('controls-help');
+
+let progressInterval;
+
+controlsHelp.addEventListener('click', () => {
+    controlsHelp.classList.add('hidden');
+});
+
+function startGame(wadFile, gameName) {
+    gameSelect.style.display = 'none';
+    loading.classList.add('active');
+    gameTitle.textContent = gameName;
+
+    let progress = 0;
+    progressInterval = setInterval(() => {
+        progress += Math.random() * 15;
+        if(progress > 90) progress = 90;
+        progressBar.style.width = progress + '%';
+    }, 500);
+
+    status.textContent = `Loading ${gameName}...`;
+
+    const canvas = document.createElement('canvas');
+    gameContainer.appendChild(canvas);
+
+    // v7: use CDN wdosbox
+    Dos(canvas, { wdosboxUrl: "https://js-dos.com/7.4.1/wdosbox.js" })
+        .ready((fs, main) => {
+            status.textContent = 'Downloading game files...';
+            progressBar.style.width = '50%';
+
+            fetch(`./${wadFile}`)
+                .then(res => {
+                    if(!res.ok) throw new Error('WAD file not found');
+                    return res.arrayBuffer();
+                })
+                .then(data => {
+                    fs.createFile("FREEDOOM.WAD", new Uint8Array(data));
+                    status.textContent = 'Starting game...';
+                    progressBar.style.width = '95%';
+                    main(["-c", "FREEDOOM.WAD"]).then(() => {
                         clearInterval(progressInterval);
-                        
+                        progressBar.style.width = '100%';
                         setTimeout(() => {
-                            if (confirm('Failed to load game. Return to menu?')) {
-                                location.reload();
-                            }
-                        }, 2000);
+                            loading.classList.remove('active');
+                            gameContainer.style.display = 'block';
+                            controlsHelp.style.display = 'block';
+                        }, 500);
                     });
-            }).catch(error => {
-                status.textContent = 'Error initializing: ' + error;
-                status.style.color = '#ff0000';
-                clearInterval(progressInterval);
-            });
-        }
-        // Prevent page scrolling/zooming
-        document.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-        }, { passive: false });
-        
-        document.addEventListener('gesturestart', (e) => {
-            e.preventDefault();
+                })
+                .catch(err => {
+                    status.textContent = 'Error: ' + err.message;
+                    status.style.color = '#ff0000';
+                    clearInterval(progressInterval);
+                    setTimeout(() => { if(confirm('Failed to load game. Return to menu?')) location.reload(); }, 2000);
+                });
+        })
+        .catch(err => {
+            status.textContent = 'Error initializing: ' + err;
+            status.style.color = '#ff0000';
+            clearInterval(progressInterval);
         });
-    </script>
+}
+
+// Prevent scrolling/zooming
+document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+document.addEventListener('gesturestart', e => e.preventDefault());
+</script>
 </body>
 </html>
