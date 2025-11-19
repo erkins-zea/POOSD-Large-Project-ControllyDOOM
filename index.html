@@ -141,7 +141,8 @@ window.addEventListener('DOMContentLoaded', () => {
         const canvas = document.createElement('canvas');
         gameContainer.appendChild(canvas);
 
-        Dos(canvas, { wdosboxUrl: "https://js-dos.com/7.4.1/wdosbox.js" })
+        // v7 global object fix
+        jsdos(canvas, { wdosboxUrl: "https://js-dos.com/7.4.1/wdosbox.js" })
             .ready((fs, main) => {
                 status.textContent = 'Downloading game files...';
                 progressBar.style.width = '50%';
