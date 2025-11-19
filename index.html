@@ -106,7 +106,7 @@ Shift: Run<br>
 </div>
 
 <!-- JS-DOS v7 CDN: LOAD FIRST -->
-<script src="https://js-dos.com/7.4.1/js-dos.js"></script>
+<script src="./js-dos.js"></script>
 
 <!-- Main Game Script: runs after js-dos is fully loaded -->
 <script>
@@ -144,7 +144,7 @@ function startGame(wadFile, gameName) {
     gameContainer.appendChild(canvas);
 
     // Use jsdos() — guaranteed to exist
-    jsdos(canvas, { wdosboxUrl: "https://js-dos.com/7.4.1/wdosbox.js" })
+    jsdos(canvas, { wdosboxUrl: "./wdosbox.js" })
         .ready((fs, main) => {
             status.textContent = 'Downloading game files...';
             progressBar.style.width = '50%';
