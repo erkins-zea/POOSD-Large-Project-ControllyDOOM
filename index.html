@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FreeDOOM Mobile</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            z-index: 1000;
+        }
+        
+        #loading h1 {
+            color: #ff0000;
+            font-size: 2em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px #000;
+        }
+        
+        #loading p {
+            font-size: 1.2em;
+            margin: 10px;
+        }
+        
+        #progress {
+            width: 80%;
+            height: 30px;
+            background: #333;
+            border: 2px solid #666;
+            margin: 20px;
+            position: relative;
+        }
+        
+        #progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ff0000, #aa0000);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            display: none;
+        }
+        
+        #controls-help {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            max-width: 200px;
+            z-index: 100;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <h1>🎮 FREEDOOM</h1>
+        <p>Loading Easter Egg...</p>
+        <div id="progress">
+            <div id="progress-bar"></div>
+        </div>
+        <p id="status">Initializing...</p>
+        <p style="font-size: 0.8em; color: #666; margin-top: 20px;">
+            This may take 15-30 seconds on mobile
+        </p>
+    </div>
+    
+    <div id="game-container"></div>
+    
+    <div id="controls-help">
+        <strong>Controls:</strong><br>
+        Arrow Keys: Move<br>
+        Ctrl: Fire<br>
+        Space: Use/Open<br>
+        Shift: Run<br>
+        <br>
+        <small>Tap here to hide</small>
+    </div>
+
+    <!-- js-dos from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/js-dos@6.22.60/dist/js-dos.js"></script>
+    
+    <script>
+        const loading = document.getElementById('loading');
+        const gameContainer = document.getElementById('game-container');
+        const progressBar = document.getElementById('progress-bar');
+        const status = document.getElementById('status');
+        const controlsHelp = document.getElementById('controls-help');
+        
+        // Hide controls help on tap
+        controlsHelp.addEventListener('click', () => {
+            controlsHelp.classList.add('hidden');
+        });
+        
+        // Progress simulation (since we can't track real progress easily)
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress > 90) progress = 90;
+            progressBar.style.width = progress + '%';
+        }, 500);
+        
+        // Initialize js-dos
+        status.textContent = 'Loading FreeDOOM...';
+        
+        Dosbox({
+            id: "game-container",
+            onload: (dosbox) => {
+                status.textContent = 'Starting game...';
+                progressBar.style.width = '95%';
+                
+                // Load FreeDOOM WAD from GitHub
+                dosbox.run("https://archive.org/cors/freedoom-phase-1-v0.12.1/freedm.wad", "./FREEDOOM.WAD").then(() => {
+                    clearInterval(progressInterval);
+                    progressBar.style.width = '100%';
+                    
+                    setTimeout(() => {
+                        loading.style.display = 'none';
+                        gameContainer.style.display = 'block';
+                    }, 500);
+                });
+            },
+            onerror: (error) => {
+                status.textContent = 'Error loading game: ' + error;
+                status.style.color = '#ff0000';
+                clearInterval(progressInterval);
+            }
+        });
+        
+        // Prevent page scrolling/zooming
+        document.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+        }, { passive: false });
+        
+        document.addEventListener('gesturestart', (e) => {
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>
