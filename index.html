@@ -125,33 +125,36 @@ function startGame(wadFile, gameName) {
     gameTitle.textContent = gameName;
     progressBar.style.width = '0%';
 
-    // Use crispy-doom.exe instead of DOOM.EXE
-    Dos(gameContainer, {
+    // v8: Dos() returns emulator instance directly
+    const emulator = Dos(gameContainer, {
         wdosboxUrl: "./wdosbox.js",
         wasmUrl: "./wdosbox.wasm"
-    }).then(emulator => {
-        emulator.mount("/", "/");
+    });
 
-        let progress = 0;
-        const progressInterval = setInterval(() => {
-            progress += Math.random() * 15;
-            if(progress > 90) progress = 90;
-            progressBar.style.width = progress + '%';
-        }, 300);
+    // Mount root
+    emulator.mount("/", "/");
 
-        emulator.run("crispy-doom.exe -iwad " + wadFile).then(() => {
-            clearInterval(progressInterval);
-            progressBar.style.width = '100%';
-            setTimeout(() => {
-                loading.classList.remove('active');
-                gameContainer.style.display = 'block';
-                controlsHelp.style.display = 'block';
-            }, 500);
-        }).catch(err => {
-            clearInterval(progressInterval);
-            alert("Failed to load game: " + err);
-            location.reload();
-        });
+    // Fake progress
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress > 90) progress = 90;
+        progressBar.style.width = progress + "%";
+    }, 300);
+
+    // Run crispy-doom.exe with FreeDOOM WAD
+    emulator.run("crispy-doom.exe -iwad " + wadFile).then(() => {
+        clearInterval(interval);
+        progressBar.style.width = "100%";
+        setTimeout(() => {
+            loading.classList.remove("active");
+            gameContainer.style.display = "block";
+            controlsHelp.style.display = "block";
+        }, 500);
+    }).catch(err => {
+        clearInterval(interval);
+        alert("Failed to load game: " + err);
+        location.reload();
     });
 }
 
