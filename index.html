@@ -98,7 +98,7 @@ Shift: Run<br>
 <small>Tap to hide</small>
 </div>
 
-<!-- JS-DOS v7 -->
+<!-- JS-DOS v8 -->
 <script src="./js-dos.js"></script>
 
 <script>
@@ -125,14 +125,13 @@ function startGame(wadFile, gameName) {
     gameTitle.textContent = gameName;
     progressBar.style.width = '0%';
 
+    // Use crispy-doom.exe instead of DOOM.EXE
     Dos(gameContainer, {
         wdosboxUrl: "./wdosbox.js",
         wasmUrl: "./wdosbox.wasm"
     }).then(emulator => {
-        // Mount current repo root so DOSBox can access WAD + EXE
         emulator.mount("/", "/");
 
-        // Optional: Fake loading progress
         let progress = 0;
         const progressInterval = setInterval(() => {
             progress += Math.random() * 15;
@@ -140,8 +139,7 @@ function startGame(wadFile, gameName) {
             progressBar.style.width = progress + '%';
         }, 300);
 
-        // Run the game
-        emulator.run("DOOM.EXE -iwad " + wadFile).then(() => {
+        emulator.run("crispy-doom.exe -iwad " + wadFile).then(() => {
             clearInterval(progressInterval);
             progressBar.style.width = '100%';
             setTimeout(() => {
