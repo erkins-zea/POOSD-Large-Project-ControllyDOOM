@@ -135,53 +135,30 @@ function startGame(wadFile, gameName) {
         progressBar.style.width = progress + '%';
     }, 500);
 
-    status.textContent = 'Loading DOOM engine...';
+    status.textContent = 'Loading...';
 
-    const canvas = document.createElement('canvas');
-    gameContainer.appendChild(canvas);
+    // Create bundle config
+    const bundleUrl = wadFile === 'freedoom1.wad' 
+        ? './freedoom1-bundle.jsdos' 
+        : './freedoom2-bundle.jsdos';
 
-    jsdos(canvas, { wdosboxUrl: "./wdosbox.js" })
-        .ready((fs, main) => {
-            // Load DOOM.EXE
-            fetch('./DOOM.EXE')
-                .then(res => res.arrayBuffer())
-                .then(dataDoom => {
-                    fs.createFile("DOOM.EXE", new Uint8Array(dataDoom));
-                    status.textContent = 'Loading WAD...';
-                    progressBar.style.width = '50%';
-
-                    // Load selected FreeDOOM WAD
-                    fetch(`./${wadFile}`)
-                        .then(res => res.arrayBuffer())
-                        .then(dataWad => {
-                            fs.createFile("FREEDOOM.WAD", new Uint8Array(dataWad));
-                            status.textContent = 'Starting game...';
-                            progressBar.style.width = '95%';
-
-                            // Run DOOM.EXE with FreeDOOM.WAD
-                            main(["-c", "DOOM.EXE -iwad FREEDOOM.WAD"]).then(() => {
-                                clearInterval(progressInterval);
-                                progressBar.style.width = '100%';
-                                setTimeout(() => {
-                                    loading.classList.remove('active');
-                                    gameContainer.style.display = 'block';
-                                    controlsHelp.style.display = 'block';
-                                }, 500);
-                            });
-                        });
-                })
-                .catch(err => {
-                    status.textContent = 'Error: ' + err.message;
-                    status.style.color = '#ff0000';
-                    clearInterval(progressInterval);
-                    setTimeout(() => { if(confirm('Failed to load game. Return to menu?')) location.reload(); }, 2000);
-                });
-        })
-        .catch(err => {
-            status.textContent = 'Error initializing: ' + err;
-            status.style.color = '#ff0000';
-            clearInterval(progressInterval);
-        });
+    // Initialize emulator
+    Dos(gameContainer).run(bundleUrl).then(() => {
+        clearInterval(progressInterval);
+        progressBar.style.width = '100%';
+        setTimeout(() => {
+            loading.classList.remove('active');
+            gameContainer.style.display = 'block';
+            controlsHelp.style.display = 'block';
+        }, 500);
+    }).catch(err => {
+        status.textContent = 'Error: ' + err;
+        status.style.color = '#ff0000';
+        clearInterval(progressInterval);
+        setTimeout(() => { 
+            if(confirm('Failed. Return to menu?')) location.reload(); 
+        }, 2000);
+    });
 }
 
 document.querySelectorAll('.game-button').forEach(btn => {
