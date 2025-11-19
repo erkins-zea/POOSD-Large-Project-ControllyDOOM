@@ -114,9 +114,7 @@ controlsHelp.addEventListener('click', () => {
 });
 
 document.querySelectorAll('.game-button').forEach(btn => {
-    btn.addEventListener('click', () => {
-        startGame(btn.dataset.wad, btn.dataset.name);
-    });
+    btn.addEventListener('click', () => startGame(btn.dataset.wad, btn.dataset.name));
 });
 
 function startGame(wadFile, gameName) {
@@ -125,16 +123,12 @@ function startGame(wadFile, gameName) {
     gameTitle.textContent = gameName;
     progressBar.style.width = '0%';
 
-    // v8: Dos() returns emulator instance directly
+    // FIXED - v8 API doesn't use .then()
     const emulator = Dos(gameContainer, {
-        wdosboxUrl: "./wdosbox.js",
-        wasmUrl: "./wdosbox.wasm"
+        wdosboxUrl: "./wdosbox.js"
     });
 
-    // Mount root
-    emulator.mount("/", "/");
-
-    // Fake progress
+    // Fake progress bar
     let progress = 0;
     const interval = setInterval(() => {
         progress += Math.random() * 15;
@@ -142,20 +136,17 @@ function startGame(wadFile, gameName) {
         progressBar.style.width = progress + "%";
     }, 300);
 
-    // Run crispy-doom.exe with FreeDOOM WAD
-    emulator.run("crispy-doom.exe -iwad " + wadFile).then(() => {
+    // Just run it directly - no .then()
+    emulator.run("crispy-doom.exe -iwad " + wadFile);
+    
+    // Hide loading after 3 seconds
+    setTimeout(() => {
         clearInterval(interval);
         progressBar.style.width = "100%";
-        setTimeout(() => {
-            loading.classList.remove("active");
-            gameContainer.style.display = "block";
-            controlsHelp.style.display = "block";
-        }, 500);
-    }).catch(err => {
-        clearInterval(interval);
-        alert("Failed to load game: " + err);
-        location.reload();
-    });
+        loading.classList.remove("active");
+        gameContainer.style.display = "block";
+        controlsHelp.style.display = "block";
+    }, 3000);
 }
 
 // Prevent mobile scrolling
