@@ -77,10 +77,6 @@ body { background: #000; overflow: hidden; font-family: Arial, sans-serif; }
         FreeDOOM Phase 2
         <div class="game-info">32 Action-Packed Levels</div>
     </button>
-
-    <p style="font-size:0.8em; color:#444; margin-top:30px;">
-        Tap mascot 7 times on login to return here
-    </p>
 </div>
 
 <div id="loading">
@@ -88,9 +84,6 @@ body { background: #000; overflow: hidden; font-family: Arial, sans-serif; }
     <p>Loading...</p>
     <div id="progress"><div id="progress-bar"></div></div>
     <p id="status">Initializing...</p>
-    <p style="font-size:0.8em; color:#666; margin-top:20px;">
-        This may take 15-30 seconds
-    </p>
 </div>
 
 <div id="game-container"></div>
@@ -113,53 +106,12 @@ const gameSelect = document.getElementById('game-select');
 const loading = document.getElementById('loading');
 const gameContainer = document.getElementById('game-container');
 const progressBar = document.getElementById('progress-bar');
-const status = document.getElementById('status');
 const gameTitle = document.getElementById('game-title');
 const controlsHelp = document.getElementById('controls-help');
-
-let progressInterval;
 
 controlsHelp.addEventListener('click', () => {
     controlsHelp.classList.add('hidden');
 });
-
-function startGame(wadFile, gameName) {
-    gameSelect.style.display = 'none';
-    loading.classList.add('active');
-    gameTitle.textContent = gameName;
-
-    let progress = 0;
-    progressInterval = setInterval(() => {
-        progress += Math.random() * 15;
-        if(progress > 90) progress = 90;
-        progressBar.style.width = progress + '%';
-    }, 500);
-
-    status.textContent = 'Loading...';
-
-    // Create bundle config
-    const bundleUrl = wadFile === 'freedoom1.wad' 
-        ? './freedoom1-bundle.jsdos' 
-        : './freedoom2-bundle.jsdos';
-
-    // Initialize emulator
-    Dos(gameContainer).run(bundleUrl).then(() => {
-        clearInterval(progressInterval);
-        progressBar.style.width = '100%';
-        setTimeout(() => {
-            loading.classList.remove('active');
-            gameContainer.style.display = 'block';
-            controlsHelp.style.display = 'block';
-        }, 500);
-    }).catch(err => {
-        status.textContent = 'Error: ' + err;
-        status.style.color = '#ff0000';
-        clearInterval(progressInterval);
-        setTimeout(() => { 
-            if(confirm('Failed. Return to menu?')) location.reload(); 
-        }, 2000);
-    });
-}
 
 document.querySelectorAll('.game-button').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -167,8 +119,48 @@ document.querySelectorAll('.game-button').forEach(btn => {
     });
 });
 
+function startGame(wadFile, gameName) {
+    gameSelect.style.display = 'none';
+    loading.classList.add('active');
+    gameTitle.textContent = gameName;
+    progressBar.style.width = '0%';
+
+    Dos(gameContainer, {
+        wdosboxUrl: "./wdosbox.js",
+        wasmUrl: "./wdosbox.wasm"
+    }).ready().then(emulator => {
+        // Mount current repo root so DOSBox can access WAD + EXE
+        emulator.mount("/", "/");
+
+        // Optional: Fake loading progress
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 15;
+            if(progress > 90) progress = 90;
+            progressBar.style.width = progress + '%';
+        }, 300);
+
+        // Run the game
+        emulator.run("DOOM.EXE -iwad " + wadFile).then(() => {
+            clearInterval(progressInterval);
+            progressBar.style.width = '100%';
+            setTimeout(() => {
+                loading.classList.remove('active');
+                gameContainer.style.display = 'block';
+                controlsHelp.style.display = 'block';
+            }, 500);
+        }).catch(err => {
+            clearInterval(progressInterval);
+            alert("Failed to load game: " + err);
+            location.reload();
+        });
+    });
+}
+
+// Prevent mobile scrolling
 document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 document.addEventListener('gesturestart', e => e.preventDefault());
 </script>
+
 </body>
 </html>
