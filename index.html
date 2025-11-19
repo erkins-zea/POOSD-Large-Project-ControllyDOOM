@@ -235,7 +235,7 @@
                 progressBar.style.width = progress + '%';
             }, 500);
             
-            // Initialize js-dos (CORRECTED)
+            // Initialize js-dos with LOCAL wdosbox
             status.textContent = `Loading ${gameName}...`;
             
             // Create canvas element
@@ -243,7 +243,7 @@
             gameContainer.appendChild(canvas);
             
             Dos(canvas, {
-                wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js",
+                wdosboxUrl: "./wdosbox.js",
             }).ready((fs, main) => {
                 status.textContent = 'Downloading game files...';
                 progressBar.style.width = '50%';
