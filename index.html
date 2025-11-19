@@ -128,7 +128,7 @@ function startGame(wadFile, gameName) {
     Dos(gameContainer, {
         wdosboxUrl: "./wdosbox.js",
         wasmUrl: "./wdosbox.wasm"
-    }).ready().then(emulator => {
+    }).then(emulator => {
         // Mount current repo root so DOSBox can access WAD + EXE
         emulator.mount("/", "/");
 
