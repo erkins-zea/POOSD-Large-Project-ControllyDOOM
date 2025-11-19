@@ -225,7 +225,7 @@
             // Hide selection, show loading
             gameSelect.style.display = 'none';
             loading.classList.add('active');
-            gameTitle.textContent = `🎮 ${gameName}`;
+            gameTitle.textContent = `${gameName}`;
             
             // Progress simulation
             let progress = 0;
@@ -235,50 +235,64 @@
                 progressBar.style.width = progress + '%';
             }, 500);
             
-            // Initialize js-dos
+            // Initialize js-dos (CORRECTED)
             status.textContent = `Loading ${gameName}...`;
             
-            Dosbox({
-                id: "game-container",
-                onload: (dosbox) => {
-                    status.textContent = 'Starting game...';
-                    progressBar.style.width = '95%';
-                    
-                    // Load the selected WAD file
-                    // If you uploaded to GitHub, use: `./${wadFile}`
-                    // For now using Internet Archive as fallback
-                    const wadPath = `./${wadFile}`;
-                    
-                    dosbox.run(wadPath, "./FREEDOOM.WAD").then(() => {
-                        clearInterval(progressInterval);
-                        progressBar.style.width = '100%';
+            // Create canvas element
+            const canvas = document.createElement('canvas');
+            gameContainer.appendChild(canvas);
+            
+            Dos(canvas, {
+                wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.wasm.js",
+            }).ready((fs, main) => {
+                status.textContent = 'Downloading game files...';
+                progressBar.style.width = '50%';
+                
+                // Download WAD file
+                fetch(`./${wadFile}`)
+                    .then(response => {
+                        if (!response.ok) throw new Error('WAD file not found');
+                        return response.arrayBuffer();
+                    })
+                    .then(data => {
+                        status.textContent = 'Extracting files...';
+                        progressBar.style.width = '75%';
                         
-                        setTimeout(() => {
-                            loading.classList.remove('active');
-                            gameContainer.style.display = 'block';
-                            controlsHelp.style.display = 'block';
-                        }, 500);
-                    }).catch((error) => {
-                        status.textContent = 'Error loading game: ' + error;
+                        // Write WAD to virtual filesystem
+                        fs.createFile("FREEDOOM.WAD", new Uint8Array(data));
+                        
+                        status.textContent = 'Starting game...';
+                        progressBar.style.width = '95%';
+                        
+                        // Start DOOM
+                        main(["-c", "FREEDOOM.WAD"]).then(() => {
+                            clearInterval(progressInterval);
+                            progressBar.style.width = '100%';
+                            
+                            setTimeout(() => {
+                                loading.classList.remove('active');
+                                gameContainer.style.display = 'block';
+                                controlsHelp.style.display = 'block';
+                            }, 500);
+                        });
+                    })
+                    .catch(error => {
+                        status.textContent = 'Error: ' + error.message;
                         status.style.color = '#ff0000';
                         clearInterval(progressInterval);
                         
-                        // Show retry option
                         setTimeout(() => {
                             if (confirm('Failed to load game. Return to menu?')) {
                                 location.reload();
                             }
                         }, 2000);
                     });
-                },
-                onerror: (error) => {
-                    status.textContent = 'Error: ' + error;
-                    status.style.color = '#ff0000';
-                    clearInterval(progressInterval);
-                }
+            }).catch(error => {
+                status.textContent = 'Error initializing: ' + error;
+                status.style.color = '#ff0000';
+                clearInterval(progressInterval);
             });
         }
-        
         // Prevent page scrolling/zooming
         document.addEventListener('touchmove', (e) => {
             e.preventDefault();
