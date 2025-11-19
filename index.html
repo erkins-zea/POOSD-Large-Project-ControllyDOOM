@@ -105,10 +105,9 @@ Shift: Run<br>
 <small>Tap to hide</small>
 </div>
 
-<!-- JS-DOS v7 CDN: LOAD FIRST -->
+<!-- JS-DOS v7 -->
 <script src="./js-dos.js"></script>
 
-<!-- Main Game Script: runs after js-dos is fully loaded -->
 <script>
 const gameSelect = document.getElementById('game-select');
 const loading = document.getElementById('loading');
@@ -120,12 +119,10 @@ const controlsHelp = document.getElementById('controls-help');
 
 let progressInterval;
 
-// Hide controls overlay when tapped
 controlsHelp.addEventListener('click', () => {
     controlsHelp.classList.add('hidden');
 });
 
-// Start a game
 function startGame(wadFile, gameName) {
     gameSelect.style.display = 'none';
     loading.classList.add('active');
@@ -138,35 +135,40 @@ function startGame(wadFile, gameName) {
         progressBar.style.width = progress + '%';
     }, 500);
 
-    status.textContent = `Loading ${gameName}...`;
+    status.textContent = 'Loading DOOM engine...';
 
     const canvas = document.createElement('canvas');
     gameContainer.appendChild(canvas);
 
-    // Use jsdos() — guaranteed to exist
     jsdos(canvas, { wdosboxUrl: "./wdosbox.js" })
         .ready((fs, main) => {
-            status.textContent = 'Downloading game files...';
-            progressBar.style.width = '50%';
+            // Load DOOM.EXE
+            fetch('./DOOM.EXE')
+                .then(res => res.arrayBuffer())
+                .then(dataDoom => {
+                    fs.createFile("DOOM.EXE", new Uint8Array(dataDoom));
+                    status.textContent = 'Loading WAD...';
+                    progressBar.style.width = '50%';
 
-            fetch(`./${wadFile}`)
-                .then(res => {
-                    if(!res.ok) throw new Error('WAD file not found');
-                    return res.arrayBuffer();
-                })
-                .then(data => {
-                    fs.createFile("FREEDOOM.WAD", new Uint8Array(data));
-                    status.textContent = 'Starting game...';
-                    progressBar.style.width = '95%';
-                    main(["-c", "FREEDOOM.WAD"]).then(() => {
-                        clearInterval(progressInterval);
-                        progressBar.style.width = '100%';
-                        setTimeout(() => {
-                            loading.classList.remove('active');
-                            gameContainer.style.display = 'block';
-                            controlsHelp.style.display = 'block';
-                        }, 500);
-                    });
+                    // Load selected FreeDOOM WAD
+                    fetch(`./${wadFile}`)
+                        .then(res => res.arrayBuffer())
+                        .then(dataWad => {
+                            fs.createFile("FREEDOOM.WAD", new Uint8Array(dataWad));
+                            status.textContent = 'Starting game...';
+                            progressBar.style.width = '95%';
+
+                            // Run DOOM.EXE with FreeDOOM.WAD
+                            main(["-c", "DOOM.EXE -iwad FREEDOOM.WAD"]).then(() => {
+                                clearInterval(progressInterval);
+                                progressBar.style.width = '100%';
+                                setTimeout(() => {
+                                    loading.classList.remove('active');
+                                    gameContainer.style.display = 'block';
+                                    controlsHelp.style.display = 'block';
+                                }, 500);
+                            });
+                        });
                 })
                 .catch(err => {
                     status.textContent = 'Error: ' + err.message;
@@ -182,14 +184,12 @@ function startGame(wadFile, gameName) {
         });
 }
 
-// Attach startGame to buttons
 document.querySelectorAll('.game-button').forEach(btn => {
     btn.addEventListener('click', () => {
         startGame(btn.dataset.wad, btn.dataset.name);
     });
 });
 
-// Prevent scrolling/zooming
 document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 document.addEventListener('gesturestart', e => e.preventDefault());
 </script>
