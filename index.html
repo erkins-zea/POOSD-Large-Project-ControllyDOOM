@@ -105,93 +105,93 @@ Shift: Run<br>
 <small>Tap to hide</small>
 </div>
 
-<!-- JS-DOS v7 CDN -->
+<!-- JS-DOS v7 CDN: LOAD FIRST -->
 <script src="https://js-dos.com/7.4.1/js-dos.js"></script>
 
+<!-- Main Game Script: runs after js-dos is fully loaded -->
 <script>
-window.addEventListener('DOMContentLoaded', () => {
-    const gameSelect = document.getElementById('game-select');
-    const loading = document.getElementById('loading');
-    const gameContainer = document.getElementById('game-container');
-    const progressBar = document.getElementById('progress-bar');
-    const status = document.getElementById('status');
-    const gameTitle = document.getElementById('game-title');
-    const controlsHelp = document.getElementById('controls-help');
+const gameSelect = document.getElementById('game-select');
+const loading = document.getElementById('loading');
+const gameContainer = document.getElementById('game-container');
+const progressBar = document.getElementById('progress-bar');
+const status = document.getElementById('status');
+const gameTitle = document.getElementById('game-title');
+const controlsHelp = document.getElementById('controls-help');
 
-    let progressInterval;
+let progressInterval;
 
-    controlsHelp.addEventListener('click', () => {
-        controlsHelp.classList.add('hidden');
-    });
-
-    function startGame(wadFile, gameName) {
-        gameSelect.style.display = 'none';
-        loading.classList.add('active');
-        gameTitle.textContent = gameName;
-
-        let progress = 0;
-        progressInterval = setInterval(() => {
-            progress += Math.random() * 15;
-            if(progress > 90) progress = 90;
-            progressBar.style.width = progress + '%';
-        }, 500);
-
-        status.textContent = `Loading ${gameName}...`;
-
-        const canvas = document.createElement('canvas');
-        gameContainer.appendChild(canvas);
-
-        // v7 global object fix
-        jsdos(canvas, { wdosboxUrl: "https://js-dos.com/7.4.1/wdosbox.js" })
-            .ready((fs, main) => {
-                status.textContent = 'Downloading game files...';
-                progressBar.style.width = '50%';
-
-                fetch(`./${wadFile}`)
-                    .then(res => {
-                        if(!res.ok) throw new Error('WAD file not found');
-                        return res.arrayBuffer();
-                    })
-                    .then(data => {
-                        fs.createFile("FREEDOOM.WAD", new Uint8Array(data));
-                        status.textContent = 'Starting game...';
-                        progressBar.style.width = '95%';
-                        main(["-c", "FREEDOOM.WAD"]).then(() => {
-                            clearInterval(progressInterval);
-                            progressBar.style.width = '100%';
-                            setTimeout(() => {
-                                loading.classList.remove('active');
-                                gameContainer.style.display = 'block';
-                                controlsHelp.style.display = 'block';
-                            }, 500);
-                        });
-                    })
-                    .catch(err => {
-                        status.textContent = 'Error: ' + err.message;
-                        status.style.color = '#ff0000';
-                        clearInterval(progressInterval);
-                        setTimeout(() => { if(confirm('Failed to load game. Return to menu?')) location.reload(); }, 2000);
-                    });
-            })
-            .catch(err => {
-                status.textContent = 'Error initializing: ' + err;
-                status.style.color = '#ff0000';
-                clearInterval(progressInterval);
-            });
-    }
-
-    // Attach startGame to buttons safely
-    const buttons = document.querySelectorAll('.game-button');
-    buttons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            startGame(btn.dataset.wad, btn.dataset.name);
-        });
-    });
-
-    // Prevent scrolling/zooming
-    document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
-    document.addEventListener('gesturestart', e => e.preventDefault());
+// Hide controls overlay when tapped
+controlsHelp.addEventListener('click', () => {
+    controlsHelp.classList.add('hidden');
 });
+
+// Start a game
+function startGame(wadFile, gameName) {
+    gameSelect.style.display = 'none';
+    loading.classList.add('active');
+    gameTitle.textContent = gameName;
+
+    let progress = 0;
+    progressInterval = setInterval(() => {
+        progress += Math.random() * 15;
+        if(progress > 90) progress = 90;
+        progressBar.style.width = progress + '%';
+    }, 500);
+
+    status.textContent = `Loading ${gameName}...`;
+
+    const canvas = document.createElement('canvas');
+    gameContainer.appendChild(canvas);
+
+    // Use jsdos() — guaranteed to exist
+    jsdos(canvas, { wdosboxUrl: "https://js-dos.com/7.4.1/wdosbox.js" })
+        .ready((fs, main) => {
+            status.textContent = 'Downloading game files...';
+            progressBar.style.width = '50%';
+
+            fetch(`./${wadFile}`)
+                .then(res => {
+                    if(!res.ok) throw new Error('WAD file not found');
+                    return res.arrayBuffer();
+                })
+                .then(data => {
+                    fs.createFile("FREEDOOM.WAD", new Uint8Array(data));
+                    status.textContent = 'Starting game...';
+                    progressBar.style.width = '95%';
+                    main(["-c", "FREEDOOM.WAD"]).then(() => {
+                        clearInterval(progressInterval);
+                        progressBar.style.width = '100%';
+                        setTimeout(() => {
+                            loading.classList.remove('active');
+                            gameContainer.style.display = 'block';
+                            controlsHelp.style.display = 'block';
+                        }, 500);
+                    });
+                })
+                .catch(err => {
+                    status.textContent = 'Error: ' + err.message;
+                    status.style.color = '#ff0000';
+                    clearInterval(progressInterval);
+                    setTimeout(() => { if(confirm('Failed to load game. Return to menu?')) location.reload(); }, 2000);
+                });
+        })
+        .catch(err => {
+            status.textContent = 'Error initializing: ' + err;
+            status.style.color = '#ff0000';
+            clearInterval(progressInterval);
+        });
+}
+
+// Attach startGame to buttons
+document.querySelectorAll('.game-button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        startGame(btn.dataset.wad, btn.dataset.name);
+    });
+});
+
+// Prevent scrolling/zooming
+document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+document.addEventListener('gesturestart', e => e.preventDefault());
 </script>
 </body>
 </html>
